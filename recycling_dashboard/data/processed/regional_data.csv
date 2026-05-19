@@ -1,0 +1,33 @@
+region,year,material,recycling_rate,source,geography_type,data_source
+California,2020,Glass,33.2,CalRecycle 2020,US State,CalRecycle 2020
+California,2020,Metal,58.4,CalRecycle 2020,US State,CalRecycle 2020
+California,2020,Paper,72.1,CalRecycle 2020,US State,CalRecycle 2020
+California,2020,Plastic,16.5,CalRecycle 2020,US State,CalRecycle 2020
+Florida,2020,Glass,22.5,FDEP 2020,US State,FDEP 2020
+Florida,2020,Metal,49.3,FDEP 2020,US State,FDEP 2020
+Florida,2020,Paper,52.3,FDEP 2020,US State,FDEP 2020
+Florida,2020,Plastic,7.9,FDEP 2020,US State,FDEP 2020
+Michigan,2020,Glass,91.4,Michigan EGLE 2020 (deposit),US State,Michigan EGLE 2020 (deposit)
+Michigan,2020,Metal,89.2,Michigan EGLE 2020 (deposit),US State,Michigan EGLE 2020 (deposit)
+Michigan,2020,Paper,66.3,Michigan EGLE 2020,US State,Michigan EGLE 2020
+Michigan,2020,Plastic,22.8,Michigan EGLE 2020,US State,Michigan EGLE 2020
+New York,2019,Glass,49.7,NYSDEC 2019 (deposit),US State,NYSDEC 2019 (deposit)
+New York,2019,Metal,62.3,NYSDEC 2019,US State,NYSDEC 2019
+New York,2019,Paper,63.2,NYSDEC 2019,US State,NYSDEC 2019
+New York,2019,Plastic,11.4,NYSDEC 2019,US State,NYSDEC 2019
+Oregon,2020,Glass,78.6,Oregon DEQ 2020 (deposit),US State,Oregon DEQ 2020 (deposit)
+Oregon,2020,Metal,71.1,Oregon DEQ 2020,US State,Oregon DEQ 2020
+Oregon,2020,Paper,68.9,Oregon DEQ 2020,US State,Oregon DEQ 2020
+Oregon,2020,Plastic,18.3,Oregon DEQ 2020,US State,Oregon DEQ 2020
+Texas,2020,Glass,14.8,TCEQ 2020,US State,TCEQ 2020
+Texas,2020,Metal,38.6,TCEQ 2020,US State,TCEQ 2020
+Texas,2020,Paper,41.2,TCEQ 2020,US State,TCEQ 2020
+Texas,2020,Plastic,4.1,TCEQ 2020,US State,TCEQ 2020
+Virginia,2020,Glass,28.3,VDEQ 2020,US State,VDEQ 2020
+Virginia,2020,Metal,54.1,VDEQ 2020,US State,VDEQ 2020
+Virginia,2020,Paper,58.7,VDEQ 2020,US State,VDEQ 2020
+Virginia,2020,Plastic,8.4,VDEQ 2020,US State,VDEQ 2020
+Washington,2019,Glass,44.1,WA Ecology 2019,US State,WA Ecology 2019
+Washington,2019,Metal,61.8,WA Ecology 2019,US State,WA Ecology 2019
+Washington,2019,Paper,70.4,WA Ecology 2019,US State,WA Ecology 2019
+Washington,2019,Plastic,19.6,WA Ecology 2019,US State,WA Ecology 2019

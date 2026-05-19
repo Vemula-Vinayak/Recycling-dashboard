@@ -1,0 +1,6 @@
+flask
+flask-cors
+pandas
+requests
+lxml
+html5lib

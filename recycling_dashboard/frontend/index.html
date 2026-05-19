@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recycling Awareness Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: #f4f7f6;
+            color: #222;
+            transition: background 0.3s, color 0.3s;
+        }
+        body.dark { background: #121212; color: #e0e0e0; }
+
+        /* NAV */
+        nav {
+            background: #2e7d32;
+            padding: 14px 30px;
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        nav h2 { font-size: 20px; font-weight: 600; }
+        .nav-links { display: flex; gap: 6px; }
+        .nav-links button {
+            background: rgba(255,255,255,0.12);
+            border: none;
+            color: white;
+            font-size: 14px;
+            font-family: 'Poppins', sans-serif;
+            cursor: pointer;
+            padding: 7px 14px;
+            border-radius: 20px;
+            transition: background 0.2s;
+        }
+        .nav-links button:hover { background: rgba(255,255,255,0.25); }
+        .nav-links button.active { background: rgba(255,255,255,0.35); font-weight: 600; }
+
+        /* HERO */
+        .hero {
+            position: relative;
+            background: url("https://images.unsplash.com/photo-1581578017423-3b01aa40f0d4") center/cover no-repeat;
+            height: 280px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.62); }
+        .hero-text { position: relative; color: white; text-align: center; z-index: 2; padding: 0 20px; }
+        .hero-text h1 { font-size: 40px; font-weight: 600; line-height: 1.2; }
+        .hero-text p { font-size: 16px; margin-top: 10px; opacity: 0.9; }
+
+        /* MARQUEE */
+        .marquee {
+            background: #e8f5e9;
+            padding: 9px;
+            color: #2e7d32;
+            font-weight: 500;
+            font-size: 14px;
+            overflow: hidden;
+            white-space: nowrap;
+        }
+        body.dark .marquee { background: #1b2e1b; color: #81c784; }
+        .marquee span {
+            display: inline-block;
+            padding-left: 100%;
+            animation: scroll 20s linear infinite;
+        }
+        @keyframes scroll { 0%{transform:translateX(0)} 100%{transform:translateX(-100%)} }
+
+        /* STAT CARDS */
+        .stat-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            padding: 30px 40px 0;
+        }
+        @media(max-width:800px){ .stat-grid { grid-template-columns: repeat(2,1fr); } }
+        .stat-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 4px 14px rgba(0,0,0,0.07);
+        }
+        body.dark .stat-card { background: #1e1e1e; }
+        .stat-card .label { font-size: 12px; color: #888; margin-bottom: 6px; text-transform: uppercase; letter-spacing: .05em; }
+        .stat-card .value { font-size: 28px; font-weight: 600; }
+        .stat-card .sub { font-size: 12px; color: #aaa; margin-top: 4px; }
+        .c-plastic { color: #ef5350; }
+        .c-paper   { color: #66bb6a; }
+        .c-glass   { color: #42a5f5; }
+        .c-metal   { color: #ffa726; }
+
+        /* SECTIONS */
+        .container { padding: 30px 40px; }
+        @media(max-width:600px){ .container { padding: 20px 16px; } }
+
+        .section { display: none; }
+        .section.active { display: block; }
+
+        .card {
+            background: white;
+            padding: 28px;
+            margin-bottom: 24px;
+            border-radius: 14px;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.07);
+        }
+        body.dark .card { background: #1e1e1e; }
+        .card h3 { font-size: 17px; font-weight: 600; margin-bottom: 16px; color: #2e7d32; }
+        body.dark .card h3 { color: #81c784; }
+
+        /* FILTERS */
+        .filter-row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-bottom: 18px; }
+        .filter-row label { font-size: 13px; color: #666; }
+        body.dark .filter-row label { color: #aaa; }
+        select {
+            padding: 8px 12px;
+            font-size: 14px;
+            font-family: 'Poppins', sans-serif;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+            background: white;
+            color: #222;
+            cursor: pointer;
+        }
+        body.dark select { background: #2a2a2a; color: #e0e0e0; border-color: #555; }
+
+        /* CHART CONTAINERS */
+        .chart-wrap { position: relative; height: 320px; }
+
+        /* INSIGHTS */
+        .insight-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 14px; }
+        @media(max-width:700px){ .insight-grid { grid-template-columns: 1fr; } }
+        .insight {
+            background: #f1f8e9;
+            border-left: 4px solid #2e7d32;
+            padding: 14px 16px;
+            border-radius: 0 10px 10px 0;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+        body.dark .insight { background: #1b2e1b; }
+        .insight strong { display: block; font-size: 14px; margin-bottom: 4px; color: #2e7d32; }
+        body.dark .insight strong { color: #81c784; }
+
+        /* TABLE */
+        .table-wrap { overflow-x: auto; margin-top: 10px; }
+        table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        th, td { border: 1px solid #e0e0e0; padding: 10px 14px; text-align: center; }
+        th { background: #e8f5e9; color: #2e7d32; font-weight: 600; }
+        body.dark th { background: #1b3a1b; color: #81c784; }
+        body.dark td { border-color: #333; }
+        tr:hover td { background: #f9fbe7; }
+        body.dark tr:hover td { background: #1f2e1f; }
+
+        /* LOADING */
+        .loading { text-align: center; padding: 40px; color: #888; font-size: 14px; }
+
+        /* ABOUT */
+        .about-img { width: 100%; border-radius: 12px; margin-top: 20px; max-height: 300px; object-fit: cover; }
+        .about-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 20px; }
+        @media(max-width:600px){ .about-grid { grid-template-columns: 1fr; } }
+        .about-fact { background: #f1f8e9; padding: 16px; border-radius: 10px; font-size: 13px; line-height: 1.6; }
+        body.dark .about-fact { background: #1b2e1b; }
+        .about-fact .num { font-size: 24px; font-weight: 600; color: #2e7d32; display: block; margin-bottom: 4px; }
+
+        footer {
+            background: #2e7d32;
+            color: white;
+            text-align: center;
+            padding: 16px;
+            font-size: 14px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+    <h2>♻️ Recycling Dashboard</h2>
+    <div class="nav-links">
+        <button onclick="showSection('about',this)" class="active">About</button>
+        <button onclick="showSection('national',this)">US Trends</button>
+        <button onclick="showSection('regional',this)">By State</button>
+        <button onclick="showSection('global',this)">Global</button>
+        <button onclick="toggleDark(this)">🌙</button>
+    </div>
+</nav>
+
+<!-- HERO -->
+<div class="hero">
+    <div class="overlay"></div>
+    <div class="hero-text">
+        <h1>Recycling Awareness Dashboard</h1>
+        <p>Visualizing recycling trends across materials, regions, and countries 🌍</p>
+    </div>
+</div>
+
+<!-- MARQUEE -->
+<div class="marquee">
+    <span>♻️ Plastic recycling: under 10% &nbsp;•&nbsp; Paper leads at 68% &nbsp;•&nbsp; Michigan recycles 91% of glass (deposit law) &nbsp;•&nbsp; Germany recycles 47% of all municipal waste &nbsp;•&nbsp; Reduce • Reuse • Recycle 🌱</span>
+</div>
+
+<!-- STAT CARDS -->
+<div class="stat-grid" id="statGrid">
+    <div class="stat-card"><div class="label">Plastic (2018)</div><div class="value c-plastic">8.7%</div><div class="sub">US recycling rate</div></div>
+    <div class="stat-card"><div class="label">Paper (2018)</div><div class="value c-paper">68.2%</div><div class="sub">US recycling rate</div></div>
+    <div class="stat-card"><div class="label">Glass (2018)</div><div class="value c-glass">31.3%</div><div class="sub">US recycling rate</div></div>
+    <div class="stat-card"><div class="label">Metal (2018)</div><div class="value c-metal">34.4%</div><div class="sub">US recycling rate</div></div>
+</div>
+
+<div class="container">
+
+    <!-- ── ABOUT ── -->
+    <div class="section active" id="about">
+        <div class="card">
+            <h3>Why Recycling Matters</h3>
+            <p style="font-size:14px;line-height:1.8;color:#555">
+                Recycling plays a vital role in reducing environmental pollution and conserving natural resources.
+                This dashboard analyzes recycling rates across materials (Plastic, Paper, Glass, Metal),
+                US states, and OECD countries — revealing how policy, infrastructure, and awareness drive
+                dramatically different outcomes.
+            </p>
+            <div class="about-grid">
+                <div class="about-fact"><span class="num">8.7%</span>Plastic recycling rate in the US (2018) — the lowest of all tracked materials, despite plastic being the most visible waste issue.</div>
+                <div class="about-fact"><span class="num">68.2%</span>Paper recycling rate in the US (2018) — the highest material rate, driven by decades of curbside programs.</div>
+                <div class="about-fact"><span class="num">91.4%</span>Glass recycling rate in Michigan — bottle deposit laws make a massive difference vs states with no deposit.</div>
+                <div class="about-fact"><span class="num">54%</span>South Korea's overall MSW recycling rate — one of the highest globally, driven by mandatory sorting laws.</div>
+            </div>
+            <img class="about-img"
+                 src="https://images.unsplash.com/photo-1604187351574-c75ca79f5807"
+                 alt="Recycling bins and materials">
+        </div>
+
+        <div class="card">
+            <h3>Key Findings</h3>
+            <div class="insight-grid">
+                <div class="insight"><strong>Plastic crisis</strong>Despite 60 years of data, plastic recycling has never exceeded 10% in the US — far behind all other tracked materials.</div>
+                <div class="insight"><strong>Policy matters</strong>States with bottle deposit laws (Michigan, Oregon, NY) recycle 3–6× more glass and metal than states without them.</div>
+                <div class="insight"><strong>Global gap</strong>The US ranks 30th globally in waste recovery. Germany and South Korea recycle roughly twice as much municipal waste.</div>
+                <div class="insight"><strong>Paper success</strong>Paper recycling grew from 17% in 1960 to 68% in 2018 — proof that infrastructure investment drives real change.</div>
+                <div class="insight"><strong>Regional divide</strong>Texas plastic rate (4.1%) vs California (16.5%) — regulation explains most of the 4× difference between states.</div>
+                <div class="insight"><strong>1960 baseline</strong>All materials started below 5% in 1960. 58 years of data show what policy, technology, and awareness can achieve.</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── US NATIONAL TRENDS ── -->
+    <div class="section" id="national">
+        <div class="card">
+            <h3>📈 US Recycling Rates Over Time (1960–2018)</h3>
+            <div class="filter-row">
+                <label>Show material:</label>
+                <select id="materialFilter" onchange="filterTrendChart()">
+                    <option value="all">All materials</option>
+                    <option value="Plastic">Plastic only</option>
+                    <option value="Paper">Paper only</option>
+                    <option value="Glass">Glass only</option>
+                    <option value="Metal">Metal only</option>
+                </select>
+            </div>
+            <div class="chart-wrap"><canvas id="trendChart"></canvas></div>
+        </div>
+
+        <div class="card">
+            <h3>📊 Material Comparison — Average Rate (all years)</h3>
+            <div class="chart-wrap" style="height:260px"><canvas id="avgChart"></canvas></div>
+        </div>
+
+        <div class="card">
+            <h3>📋 Data Table — Recycling Rate by Year</h3>
+            <div class="filter-row">
+                <label>Filter by material:</label>
+                <select id="tableFilter" onchange="filterTable()">
+                    <option value="all">All materials</option>
+                    <option value="Plastic">Plastic</option>
+                    <option value="Paper">Paper</option>
+                    <option value="Glass">Glass</option>
+                    <option value="Metal">Metal</option>
+                </select>
+            </div>
+            <div class="table-wrap">
+                <table id="nationalTable">
+                    <thead><tr><th>Year</th><th>Material</th><th>Recycling Rate (%)</th><th>Geography</th></tr></thead>
+                    <tbody id="nationalTbody"><tr><td colspan="4" class="loading">Loading...</td></tr></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── REGIONAL ── -->
+    <div class="section" id="regional">
+        <div class="card">
+            <h3>🗺️ State-by-State Recycling Rates</h3>
+            <div class="filter-row">
+                <label>Material:</label>
+                <select id="regionalMaterial" onchange="loadRegionalChart()">
+                    <option value="Plastic">Plastic</option>
+                    <option value="Paper">Paper</option>
+                    <option value="Glass">Glass</option>
+                    <option value="Metal">Metal</option>
+                </select>
+            </div>
+            <div class="chart-wrap"><canvas id="regionalChart"></canvas></div>
+        </div>
+
+
+        <div class="card">
+            <h3>🔥 Heatmap — State × Material</h3>
+            <p style="font-size:13px;color:#888;margin-bottom:14px">Darker green = higher recycling rate. Each cell shows the rate (%).</p>
+            <div id="heatmapWrap" style="overflow-x:auto"></div>
+        </div>
+
+        <div class="card">
+            <h3>⚖️ Bottle Deposit Law Impact</h3>
+            <p style="font-size:13px;color:#888;margin-bottom:14px">States with bottle deposit laws vs states without — average rate per material.</p>
+            <div class="chart-wrap" style="height:280px"><canvas id="depositChart"></canvas></div>
+        </div>
+        <div class="card">
+            <h3>📋 All State Data</h3>
+            <div class="table-wrap">
+                <table>
+                    <thead><tr><th>State</th><th>Year</th><th>Material</th><th>Recycling Rate (%)</th><th>Source</th></tr></thead>
+                    <tbody id="regionalTbody"><tr><td colspan="5" class="loading">Loading...</td></tr></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── GLOBAL ── -->
+    <div class="section" id="global">
+        <div class="card">
+            <h3>🌍 Country Recycling Rates — Latest Available Year</h3>
+            <div class="chart-wrap" style="height:380px"><canvas id="globalChart"></canvas></div>
+        </div>
+
+        <div class="card">
+            <h3>📋 Global Data Table</h3>
+            <div class="table-wrap">
+                <table>
+                    <thead><tr><th>Country</th><th>Year</th><th>Recycling Rate (%)</th><th>Source</th></tr></thead>
+                    <tbody id="globalTbody"><tr><td colspan="4" class="loading">Loading...</td></tr></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+</div><!-- /container -->
+
+<footer>🌱 Recycling Awareness Dashboard &nbsp;|&nbsp; Data: EPA Facts & Figures 2018, State Agency Reports, OECD 2022</footer>
+
+<script>
+// ─── state ───────────────────────────────────────────────────────────────────
+let nationalData  = [];
+let regionalData  = [];
+let globalData    = [];
+let trendChart, avgChart, regionalChart, globalChart;
+
+const COLORS = {
+    Plastic: '#ef5350',
+    Paper:   '#66bb6a',
+    Glass:   '#42a5f5',
+    Metal:   '#ffa726'
+};
+const COUNTRY_COLORS = [
+    '#2e7d32','#1565c0','#6a1b9a','#ad1457','#e65100',
+    '#00695c','#37474f','#4527a0','#558b2f','#0277bd',
+    '#6d4c41','#f9a825','#c62828','#0d47a1','#1b5e20'
+];
+
+// ─── navigation ──────────────────────────────────────────────────────────────
+function showSection(id, btn) {
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.nav-links button').forEach(b => b.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    if (btn) btn.classList.add('active');
+
+    if (id === 'national'  && !trendChart)    loadNational();
+    if (id === 'regional'  && !regionalChart) loadRegional();
+    if (id === 'global'    && !globalChart)   loadGlobal();
+}
+
+function toggleDark(btn) {
+    document.body.classList.toggle('dark');
+    btn.textContent = document.body.classList.contains('dark') ? '☀️' : '🌙';
+}
+
+// ─── national ────────────────────────────────────────────────────────────────
+async function loadNational() {
+    const res  = await fetch('/api/national');
+    nationalData = await res.json();
+    drawTrendChart(nationalData);
+    drawAvgChart(nationalData);
+    populateNationalTable(nationalData);
+}
+
+function drawTrendChart(data) {
+    const years     = [...new Set(data.map(d => d.year))].sort();
+    const materials = [...new Set(data.map(d => d.material))];
+
+    const datasets = materials.map(mat => {
+        const byYear = Object.fromEntries(
+            data.filter(d => d.material === mat).map(d => [d.year, d.recycling_rate])
+        );
+        return {
+            label: mat,
+            data: years.map(y => byYear[y] ?? null),
+            borderColor: COLORS[mat] || '#888',
+            backgroundColor: (COLORS[mat] || '#888') + '22',
+            borderWidth: 2.5,
+            pointRadius: 2,
+            tension: 0.3,
+            fill: false
+        };
+    });
+
+    if (trendChart) trendChart.destroy();
+    trendChart = new Chart(document.getElementById('trendChart'), {
+        type: 'line',
+        data: { labels: years, datasets },
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            plugins: { legend: { position: 'top' } },
+            scales: {
+                y: { title: { display: true, text: 'Recycling rate (%)' }, min: 0, max: 100 },
+                x: { title: { display: true, text: 'Year' } }
+            }
+        }
+    });
+}
+
+function filterTrendChart() {
+    const mat = document.getElementById('materialFilter').value;
+    const filtered = mat === 'all' ? nationalData : nationalData.filter(d => d.material === mat);
+    drawTrendChart(filtered);
+}
+
+function drawAvgChart(data) {
+    const materials = [...new Set(data.map(d => d.material))];
+    const avgs = materials.map(mat => {
+        const vals = data.filter(d => d.material === mat).map(d => d.recycling_rate);
+        return +(vals.reduce((a,b) => a+b, 0) / vals.length).toFixed(1);
+    });
+
+    if (avgChart) avgChart.destroy();
+    avgChart = new Chart(document.getElementById('avgChart'), {
+        type: 'bar',
+        data: {
+            labels: materials,
+            datasets: [{
+                label: 'Average recycling rate (%)',
+                data: avgs,
+                backgroundColor: materials.map(m => COLORS[m] || '#888'),
+                borderRadius: 6
+            }]
+        },
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: { y: { min: 0, max: 100, title: { display: true, text: 'Rate (%)' } } }
+        }
+    });
+}
+
+function populateNationalTable(data) {
+    const sorted = [...data].sort((a,b) => b.year - a.year || a.material.localeCompare(b.material));
+    renderNationalRows(sorted);
+}
+
+function renderNationalRows(data) {
+    document.getElementById('nationalTbody').innerHTML = data.map(d => `
+        <tr>
+            <td>${d.year}</td>
+            <td><span style="color:${COLORS[d.material]||'#888'};font-weight:600">${d.material}</span></td>
+            <td>${d.recycling_rate.toFixed(1)}%</td>
+            <td>${d.geography}</td>
+        </tr>`).join('');
+}
+
+function filterTable() {
+    const mat = document.getElementById('tableFilter').value;
+    const filtered = mat === 'all' ? nationalData : nationalData.filter(d => d.material === mat);
+    renderNationalRows([...filtered].sort((a,b) => b.year - a.year));
+}
+
+// ─── regional ────────────────────────────────────────────────────────────────
+async function loadRegional() {
+    const res = await fetch('/api/regional');
+    regionalData = await res.json();
+    loadRegionalChart();
+    populateRegionalTable();
+    loadRegional_extras(regionalData);
+}
+
+function loadRegional_extras(data) {
+    buildHeatmap(data);
+    buildDepositChart(data);
+}
+
+function loadRegionalChart() {
+    const mat  = document.getElementById('regionalMaterial').value;
+    const data = regionalData.filter(d => d.material === mat)
+                             .sort((a,b) => b.recycling_rate - a.recycling_rate);
+
+    if (regionalChart) regionalChart.destroy();
+    regionalChart = new Chart(document.getElementById('regionalChart'), {
+        type: 'bar',
+        data: {
+            labels: data.map(d => d.region),
+            datasets: [{
+                label: `${mat} recycling rate (%)`,
+                data: data.map(d => d.recycling_rate),
+                backgroundColor: COLORS[mat] || '#2e7d32',
+                borderRadius: 6
+            }]
+        },
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+                y: { min: 0, max: 100, title: { display: true, text: 'Rate (%)' } },
+                x: { ticks: { maxRotation: 30 } }
+            }
+        }
+    });
+}
+
+function populateRegionalTable() {
+    const sorted = [...regionalData].sort((a,b) =>
+        a.region.localeCompare(b.region) || a.material.localeCompare(b.material));
+    document.getElementById('regionalTbody').innerHTML = sorted.map(d => `
+        <tr>
+            <td>${d.region}</td>
+            <td>${d.year}</td>
+            <td><span style="color:${COLORS[d.material]||'#888'};font-weight:600">${d.material}</span></td>
+            <td>${d.recycling_rate.toFixed(1)}%</td>
+            <td style="font-size:11px;color:#888">${d.source || d.data_source}</td>
+        </tr>`).join('');
+}
+
+// ─── global ──────────────────────────────────────────────────────────────────
+async function loadGlobal() {
+    const res = await fetch('/api/global/compare');
+    const { labels, datasets } = await res.json();
+
+    if (globalChart) globalChart.destroy();
+    globalChart = new Chart(document.getElementById('globalChart'), {
+        type: 'bar',
+        data: {
+            labels,
+            datasets: [{
+                label: 'Recycling rate (%, most recent year)',
+                data: datasets[0].data,
+                backgroundColor: labels.map((_,i) => COUNTRY_COLORS[i % COUNTRY_COLORS.length]),
+                borderRadius: 6
+            }]
+        },
+        options: {
+            indexAxis: 'y',
+            responsive: true, maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: { x: { min: 0, max: 60, title: { display: true, text: 'Rate (%)' } } }
+        }
+    });
+
+    // also fill table
+    const res2 = await fetch('/api/global');
+    globalData  = await res2.json();
+    const sorted = [...globalData].sort((a,b) => b.recycling_rate - a.recycling_rate);
+    document.getElementById('globalTbody').innerHTML = sorted.map(d => `
+        <tr>
+            <td>${d.country}</td>
+            <td>${d.year}</td>
+            <td>${d.recycling_rate.toFixed(1)}%</td>
+            <td style="font-size:11px;color:#888">${d.data_source}</td>
+        </tr>`).join('');
+}
+
+// ─── heatmap ─────────────────────────────────────────────────────────────────
+function buildHeatmap(data) {
+    const states    = [...new Set(data.map(d => d.region))].sort();
+    const materials = ['Plastic', 'Glass', 'Metal', 'Paper'];
+    const lookup    = {};
+    data.forEach(d => { lookup[d.region + '_' + d.material] = d.recycling_rate; });
+
+    function rateToColor(v) {
+        if (v === undefined) return '#eee';
+        const t = Math.min(v / 100, 1);
+        const r = Math.round(232 - t * (232 - 27));
+        const g = Math.round(245 - t * (245 - 94));
+        const b = Math.round(233 - t * (233 - 49));
+        return `rgb(${r},${g},${b})`;
+    }
+
+    let html = '<table style="width:100%;border-collapse:collapse;font-size:13px">';
+    html += '<thead><tr><th style="padding:10px;text-align:left;background:#f5f5f5">State</th>';
+    materials.forEach(m => {
+        html += `<th style="padding:10px;text-align:center;background:${COLORS[m]}22;color:${COLORS[m]};font-weight:600">${m}</th>`;
+    });
+    html += '</tr></thead><tbody>';
+
+    states.forEach(state => {
+        const avg = materials.reduce((s, m) => s + (lookup[state+'_'+m] || 0), 0) / materials.length;
+        html += `<tr>`;
+        html += `<td style="padding:10px;font-weight:500;border-bottom:1px solid #eee">${state}</td>`;
+        materials.forEach(m => {
+            const v = lookup[state + '_' + m];
+            const bg = rateToColor(v);
+            const textColor = v > 50 ? '#fff' : '#222';
+            html += `<td style="padding:10px;text-align:center;background:${bg};color:${textColor};font-weight:500;border-bottom:1px solid #eee">${v !== undefined ? v.toFixed(1)+'%' : '-'}</td>`;
+        });
+        html += '</tr>';
+    });
+    html += '</tbody></table>';
+    document.getElementById('heatmapWrap').innerHTML = html;
+}
+
+// ─── deposit law chart ────────────────────────────────────────────────────────
+let depositChart;
+function buildDepositChart(data) {
+    const depositStates    = ['Michigan', 'Oregon', 'New York'];
+    const noDepositStates  = ['Texas', 'Florida', 'Virginia', 'California', 'Washington'];
+    const materials = ['Plastic', 'Glass', 'Metal', 'Paper'];
+
+    function avg(states, mat) {
+        const vals = data.filter(d => states.includes(d.region) && d.material === mat).map(d => d.recycling_rate);
+        return vals.length ? +(vals.reduce((a,b)=>a+b,0)/vals.length).toFixed(1) : 0;
+    }
+
+    if (depositChart) depositChart.destroy();
+    depositChart = new Chart(document.getElementById('depositChart'), {
+        type: 'bar',
+        data: {
+            labels: materials,
+            datasets: [
+                {
+                    label: 'Deposit law states (MI, OR, NY)',
+                    data: materials.map(m => avg(depositStates, m)),
+                    backgroundColor: '#2e7d32',
+                    borderRadius: 6
+                },
+                {
+                    label: 'No deposit states (TX, FL, VA, CA, WA)',
+                    data: materials.map(m => avg(noDepositStates, m)),
+                    backgroundColor: '#ef9a9a',
+                    borderRadius: 6
+                }
+            ]
+        },
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            plugins: { legend: { position: 'top' } },
+            scales: {
+                y: { min: 0, max: 100, title: { display: true, text: 'Avg recycling rate (%)' } }
+            }
+        }
+    });
+}
+
+</script>
+</body>
+</html>
